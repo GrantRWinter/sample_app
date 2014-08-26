@@ -1,5 +1,5 @@
 class User < ActiveRecord::Base
-  before_save { email.downcase! }
+  before_save { email.downcase! } # can also use { self.email = email.downcase }
   before_create :create_remember_token
 
   validates :name, presence: true, length: { maximum: 50 }
@@ -18,7 +18,10 @@ class User < ActiveRecord::Base
   end
 
   def User.digest(token)
-    Digest::SHA1.hexdigest(token.to_s)
+    Digest::SHA1.hexdigest(token.to_s) 
+    # the "to_s" method is so we can handle nil tokens
+    # this shouldn't happen in browsers but sometimes happens in tests. 
+
   end 
 
   private
