@@ -6,9 +6,13 @@ describe "Authentication" do
 
   describe "signin page" do
     before { visit signin_path }
-    it { should have_content('Sign in')}
+    it { should have_content('Sign in') }
     it { should have_selector('h1', text: 'Sign in') }
     it { should have_title('Sign in') }
+
+    #exercise 9.6.3
+    it { should_not have_content('Profile') }
+    it { should_not have_content('Settings') }
   end
 
   describe "signin" do
@@ -48,6 +52,20 @@ describe "Authentication" do
   end
 
   describe "authorization" do
+
+    describe "for admin user" do
+      let(:admin) { FactoryGirl.create(:admin) }
+      before { sign_in admin, no_capybara: true }
+
+      describe "should not be able to self delete" do
+      #   before { delete user_path(admin)}
+      #   it { should_not change(User, :count).by(-1)}
+      # end
+        specify { expect {delete user_path(admin)}.not_to change(User, :count).by(-1) }
+       
+      end
+    end
+
     describe "for non-signed-in users" do
       let(:user) { FactoryGirl.create(:user) }
 
@@ -61,8 +79,23 @@ describe "Authentication" do
 
         describe "after signing in" do
 
+          it { should have_title('Edit user') }
           it "should render the desired protected page" do
             expect(page).to have_title('Edit user')
+          end
+
+          describe "when signing in again" do
+            before do
+              click_link "Sign out"
+              visit signin_path
+              fill_in "Email", with: user.email
+              fill_in "Password", with: user.password
+              click_button "Sign in"
+            end
+
+            it "should render the default (profile) page" do 
+              expect(page).to have_title(user.name)
+            end
           end
         end
       end
@@ -114,5 +147,15 @@ describe "Authentication" do
         specify { expect(response).to redirect_to(root_url) }
       end
     end 
+
+    describe "for signed in user" do
+      let(:user) { FactoryGirl.create(:user) }
+      before { sign_in user, no_capybara: true }
+
+      describe "accessing 'new user page'" do
+        before { get new_user_path }
+        specify { expect(response).to redirect_to(root_url) }
+      end
+    end
   end
 end
