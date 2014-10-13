@@ -34,6 +34,13 @@ describe "Static Pages" do
           expect(page).to have_selector("li##{item.id}", text: item.content)
         end
       end
+
+      describe "microposts count language" do
+        before { click_link "delete", match: :first }
+        it "should be singular when count eq to 1" do
+          expect(page).to have_selector("span", text: "1 micropost")
+        end
+      end
     end
   end
 
@@ -63,6 +70,17 @@ describe "Static Pages" do
     
     
     it_should_behave_like "all static pages"
+  end
+
+  describe "micropost pagination" do
+    let(:user) { FactoryGirl.create(:user) }
+    before do
+      31.times { FactoryGirl.create(:micropost, user: user) }
+      sign_in user
+      visit root_path
+    end
+    after { user.microposts.destroy_all }
+    it { should have_selector("div.pagination") }
   end
 
   it "should have the right links on the layout" do
